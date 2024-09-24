@@ -33,3 +33,22 @@ def get_request(endpoint, **kwargs):
     except Exception as err:
         print(f"Network exception occurred: {err}")  # Handle other errors (network, etc.)
     return None  # Return None in case of an error
+
+# Define the function to analyze review sentiments
+def analyze_review_sentiments(text):
+    # Construct the URL for the sentiment analyzer microservice
+    request_url = f"{sentiment_analyzer_url}analyze/{text}"
+    print(f"GET from {request_url}")
+
+    try:
+        # Make the GET request using the requests library
+        response = requests.get(request_url)
+        # If the response is successful, return the JSON data
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        print("Network exception occurred")
+    return None  # Return None in case of an error
