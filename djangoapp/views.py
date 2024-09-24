@@ -1,5 +1,4 @@
 # Uncomment the required imports before adding the code
-
 # from django.shortcuts import render
 # from django.http import HttpResponseRedirect, HttpResponse
 # from django.contrib.auth.models import User
@@ -34,3 +33,13 @@ def get_dealerships(request, state="All"):
     
     # If something went wrong, return an error response
     return JsonResponse({"status": 500, "message": "Could not fetch dealerships"})
+
+# View to fetch dealer details based on dealer_id
+def get_dealer_details(request, dealer_id):
+    if dealer_id:
+        endpoint = f"/fetchDealer/{str(dealer_id)}"
+        dealership = get_request(endpoint)
+        if dealership:
+            return JsonResponse({"status": 200, "dealer": dealership})
+        return JsonResponse({"status": 404, "message": "Dealer not found"})
+    return JsonResponse({"status": 400, "message": "Bad Request"})
