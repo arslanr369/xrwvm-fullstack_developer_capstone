@@ -2,26 +2,24 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import logging
 import json
-from .restapis import get_request, analyze_review_sentiments  # Import get_request and analyze_review_sentiments
+from .restapis import get_request, analyze_review_sentiments, post_review  # Import required methods
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-# Existing methods...
-
-# Create a method to fetch reviews for a specific dealer
-def get_dealer_reviews(request, dealer_id):
-    # Check if dealer_id has been provided
-    if dealer_id:
-        endpoint = f"/fetchReviews/dealer/{str(dealer_id)}"
-        reviews = get_request(endpoint)  # Fetch reviews using the get_request method
-
-        # Analyze sentiment for each review and add it to the review detail
-        for review_detail in reviews:
-            response = analyze_review_sentiments(review_detail['review'])  # Call sentiment analysis
-            print(response)  # Optional: log the response for debugging
-            review_detail['sentiment'] = response.get('sentiment', 'unknown')  # Set sentiment value
-
-        return JsonResponse({"status": 200, "reviews": reviews})  # Return reviews as a JsonResponse
+@csrf_exempt  # Allow CSRF exemption for this view if necessary
+def add_review(request):
+    # Check if the user is authenticated
+    if not request.user.is_anonymous:
+        data = json.loads(request.body)  # Load the JSON data from the request body
+        try:
+            response = post_review(data)  # Call post_review with the data dictionary
+            print(response)  # Optionally log the response for debugging
+            if response and response.get("status") == 200:
+                return JsonResponse({"status": 200, "message": "Review posted successfully"})  # Return success response
+            else:
+                return JsonResponse({"status": 400, "message": "Failed to post review"})  # Handle failure case
+        except Exception as e:
+            return JsonResponse({"status": 401, "message": "Error in posting review", "error": str(e)})  # Return error response
     else:
-        return JsonResponse({"status": 400, "message": "Bad Request"})  # Handle missing dealer_id
+        return JsonResponse({"status": 403, "message": "Unauthorized"})  # Handle unauthorized access
